@@ -42,7 +42,16 @@ export function MiniCurve({ curve, position, dueAt, seed, width = 88, height = 3
       {line.map((p, i) => (
         <path key={i} d={p.d} stroke={p.stroke} strokeWidth={p.strokeWidth} fill="none" />
       ))}
-      <circle cx={cx} cy={cy} r={3.6} fill={urgencyColor(nowY)} stroke={THEME.ink} strokeWidth={1} />
+      <circle className="mini-halo" cx={cx} cy={cy} r={3.6} fill={urgencyColor(nowY)} />
+      <circle
+        className="mini-now"
+        cx={cx}
+        cy={cy}
+        r={3.6}
+        fill={urgencyColor(nowY)}
+        stroke={THEME.ink}
+        strokeWidth={1}
+      />
     </svg>
   );
 }

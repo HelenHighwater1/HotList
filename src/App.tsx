@@ -8,7 +8,9 @@ import { formatDate, nextDue } from "./lib/recurrence";
 import { TaskCard } from "./components/TaskCard";
 import { TaskPanel } from "./components/TaskPanel";
 import { RoughFrame } from "./components/RoughFrame";
+import { LoginScreen } from "./components/LoginScreen";
 import { seedFrom, THEME } from "./lib/theme";
+import { useAuth } from "./lib/auth";
 
 const BASE_NOW = Date.now();
 
@@ -30,6 +32,7 @@ function blankTask(): Task {
 }
 
 export default function App() {
+  const { user, signOut } = useAuth();
   const [tasks, setTasks] = useState<Task[]>(() => seedTasks());
   const [offset, setOffset] = useState(0);
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -67,6 +70,8 @@ export default function App() {
     month: "short",
     day: "numeric",
   });
+
+  if (!user) return <LoginScreen />;
 
   return (
     <div className="app">
@@ -108,6 +113,13 @@ export default function App() {
         >
           New task
         </button>
+
+        <div className="account">
+          <span className="mono account-name">{user}</span>
+          <button className="ghost small" onClick={signOut}>
+            sign out
+          </button>
+        </div>
       </header>
 
       {flash && (

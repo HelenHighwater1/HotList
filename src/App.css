@@ -491,6 +491,53 @@
   padding: 6px 0 10px;
 }
 
+/* ---------- account / login ---------- */
+
+.account {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  color: var(--muted);
+}
+
+.account-name {
+  font-size: 14px;
+  color: var(--ink);
+}
+
+.login {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  padding: 20px;
+}
+
+.login-card {
+  flex: 0 0 auto;
+  width: min(380px, 100%);
+  gap: 12px;
+  padding: 26px 24px 22px;
+}
+
+.login-card .brand {
+  margin-bottom: 6px;
+}
+
+.login-error {
+  margin: 0;
+  font-size: 14px;
+  color: var(--hot);
+}
+
+.login-hint {
+  margin: 0;
+  font-size: 13px;
+  color: var(--muted);
+  text-align: center;
+}
+
 @media (max-width: 900px) {
   .app {
     padding: 12px 12px 6px;

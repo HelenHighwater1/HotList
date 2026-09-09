@@ -1,27 +1,68 @@
-@import url("https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap");
+@font-face {
+  font-family: "Virgil";
+  src: url("/fonts/Virgil.woff2") format("woff2");
+  font-weight: 400 700;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Assistant";
+  src: url("/fonts/Assistant-Regular.woff2") format("woff2");
+  font-weight: 400;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Assistant";
+  src: url("/fonts/Assistant-Medium.woff2") format("woff2");
+  font-weight: 500;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Assistant";
+  src: url("/fonts/Assistant-SemiBold.woff2") format("woff2");
+  font-weight: 600;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Assistant";
+  src: url("/fonts/Assistant-Bold.woff2") format("woff2");
+  font-weight: 700;
+  font-display: swap;
+}
 
 :root {
-  --paper: #e9edf1;
-  --paper-deep: #dfe5ea;
+  --paper: #ffffff;
+  --paper-deep: #f1f0ff;
   --surface: #ffffff;
-  --ink: #12212b;
-  --muted: #5f7280;
-  --hairline: #cdd8e0;
-  --grid: #dde5eb;
-  --cool: #2f8f8a;
-  --warm: #dfa019;
-  --hot: #c2382f;
-  --focus: #12212b;
+  --ink: #1e1e1e;
+  --muted: #868e96;
+  --hairline: #d6d9de;
+  --grid: #ececf4;
+  --brand: #6965db;
+  --brand-soft: #e0dfff;
+  --cool: #1971c2;
+  --cool-soft: #a5d8ff;
+  --warm: #f08c00;
+  --warm-soft: #ffec99;
+  --hot: #e03131;
+  --hot-soft: #ffc9c9;
+  --focus: #6965db;
 
-  --r-sm: 3px;
-  --r-md: 6px;
+  --r-sm: 4px;
+  --r-md: 8px;
+  /* Wonky radii: the cheap way to make small chrome look drawn by hand. */
+  --r-hand: 255px 12px 225px 15px / 15px 225px 15px 255px;
 
-  --font-display: "Space Grotesk", "Segoe UI", sans-serif;
-  --font-body: "Inter", "Segoe UI", sans-serif;
-  --font-mono: "IBM Plex Mono", ui-monospace, monospace;
+  --font-display: "Virgil", "Segoe Print", "Comic Sans MS", cursive;
+  --font-body: "Assistant", "Segoe UI", sans-serif;
+  --font-mono: "Virgil", "Segoe Print", ui-monospace, monospace;
 
   color-scheme: light;
   font-family: var(--font-body);
+  font-size: 16px;
   color: var(--ink);
 }
 
@@ -38,9 +79,8 @@ body,
 body {
   margin: 0;
   background: var(--paper);
-  background-image: linear-gradient(var(--grid) 1px, transparent 1px),
-    linear-gradient(90deg, var(--grid) 1px, transparent 1px);
-  background-size: 28px 28px;
+  background-image: radial-gradient(var(--grid) 1.4px, transparent 1.4px);
+  background-size: 22px 22px;
   -webkit-font-smoothing: antialiased;
 }
 
@@ -49,12 +89,14 @@ h2,
 h3 {
   font-family: var(--font-display);
   margin: 0;
-  letter-spacing: -0.01em;
+  font-weight: 400;
+  letter-spacing: 0;
 }
 
 button {
   font: inherit;
   cursor: pointer;
+  color: var(--ink);
 }
 
 button:focus-visible,
@@ -72,10 +114,16 @@ textarea {
   font: inherit;
   color: var(--ink);
   background: var(--surface);
-  border: 1px solid var(--hairline);
-  border-radius: var(--r-sm);
-  padding: 7px 9px;
+  border: 1.5px solid var(--ink);
+  border-radius: var(--r-hand);
+  padding: 7px 11px;
   width: 100%;
+}
+
+input:hover,
+select:hover,
+textarea:hover {
+  border-color: var(--brand);
 }
 
 textarea {
@@ -85,15 +133,13 @@ textarea {
 
 label {
   display: block;
-  font-size: 11px;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
+  font-family: var(--font-display);
+  font-size: 12px;
+  letter-spacing: 0.02em;
   color: var(--muted);
   margin-bottom: 4px;
-  font-weight: 600;
 }
 
 .mono {
   font-family: var(--font-mono);
-  font-variant-numeric: tabular-nums;
 }

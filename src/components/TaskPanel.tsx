@@ -3,6 +3,8 @@ import { CURVE_PRESETS, dueFraction, timePosition, urgencyOf } from "../lib/curv
 import { describeRecurrence, nextDue, formatDate } from "../lib/recurrence";
 import { urgencyColor } from "../lib/color";
 import { CurveEditor } from "./CurveEditor";
+import { RoughFrame } from "./RoughFrame";
+import { seedFrom, THEME } from "../lib/theme";
 
 type Props = {
   task: Task;
@@ -48,6 +50,7 @@ export function TaskPanel({
 
   return (
     <aside className="panel">
+      <RoughFrame seed={3} stroke={THEME.ink} fill={THEME.panel} strokeWidth={1.4} />
       <header className="panel-head">
         <div>
           <p className="panel-kicker mono">{isNew ? "New task" : "Editing"}</p>
@@ -122,6 +125,7 @@ export function TaskPanel({
             position={timePosition(task, now)}
             leadDays={task.leadDays}
             lateDays={task.lateDays}
+            seed={seedFrom(task.id)}
           />
           <div className="field-row">
             <div className="field">

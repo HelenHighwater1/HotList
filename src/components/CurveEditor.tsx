@@ -2,6 +2,8 @@ import { useRef, useState } from "react";
 import type { CurvePoint } from "../types";
 import { clamp01, evalCurve, sortCurve } from "../lib/curve";
 import { urgencyColor } from "../lib/color";
+import { roughLine, roughPath, roughPolygon, roughRect } from "../lib/rough";
+import { THEME } from "../lib/theme";
 
 type Props = {
   curve: CurvePoint[];
@@ -10,6 +12,7 @@ type Props = {
   position: number;
   leadDays: number;
   lateDays: number;
+  seed: number;
 };
 
 const W = 520;
@@ -21,12 +24,20 @@ const PAD_B = 30;
 const PLOT_W = W - PAD_L - PAD_R;
 const PLOT_H = H - PAD_T - PAD_B;
 
-const toPx = (p: CurvePoint) => ({
-  x: PAD_L + p.x * PLOT_W,
-  y: PAD_T + (1 - p.y) * PLOT_H,
-});
+const toPx = (p: CurvePoint): [number, number] => [
+  PAD_L + p.x * PLOT_W,
+  PAD_T + (1 - p.y) * PLOT_H,
+];
 
-export function CurveEditor({ curve, onChange, dueAt, position, leadDays, lateDays }: Props) {
+export function CurveEditor({
+  curve,
+  onChange,
+  dueAt,
+  position,
+  leadDays,
+  lateDays,
+  seed,
+}: Props) {
   const svgRef = useRef<SVGSVGElement>(null);
   const [dragging, setDragging] = useState<number | null>(null);
   const [selected, setSelected] = useState<number | null>(null);
@@ -49,15 +60,14 @@ export function CurveEditor({ curve, onChange, dueAt, position, leadDays, lateDa
     const lo = isFirst ? 0 : points[index - 1].x + 0.01;
     const hi = isLast ? 1 : points[index + 1].x - 0.01;
     const x = isFirst ? 0 : isLast ? 1 : Math.min(Math.max(next.x, lo), hi);
-    const updated = points.map((p, i) => (i === index ? { x, y: next.y } : p));
-    onChange(updated);
+    onChange(points.map((p, i) => (i === index ? { x, y: next.y } : p)));
   }
 
   function handleBackgroundClick(e: React.PointerEvent) {
     if (dragging !== null) return;
     const p = fromEvent(e);
     if (p.x <= 0.01 || p.x >= 0.99) return;
-    const next = sortCurve([...points, { x: p.x, y: p.y }]);
+    const next = sortCurve([...points, p]);
     onChange(next);
     const index = next.findIndex((q) => q.x === p.x && q.y === p.y);
     setSelected(index);
@@ -75,9 +85,53 @@ export function CurveEditor({ curve, onChange, dueAt, position, leadDays, lateDa
     movePoint(index, { x: clamp01(p.x + dx), y: clamp01(p.y + dy) });
   }
 
-  const linePath = points.map((p, i) => `${i === 0 ? "M" : "L"}${toPx(p).x},${toPx(p).y}`).join(" ");
-  const areaPath = `${linePath} L${PAD_L + PLOT_W},${PAD_T + PLOT_H} L${PAD_L},${PAD_T + PLOT_H} Z`;
+  const pixels = points.map(toPx);
+  const frame = roughRect(PAD_L, PAD_T, PLOT_W, PLOT_H, {
+    seed: seed + 11,
+    roughness: 1.2,
+    bowing: 1.6,
+    stroke: THEME.hairline,
+    strokeWidth: 1.4,
+  });
+  const lateBand = roughRect(PAD_L + dueAt * PLOT_W, PAD_T, (1 - dueAt) * PLOT_W, PLOT_H, {
+    seed: seed + 12,
+    roughness: 1.4,
+    stroke: "none",
+    fill: THEME.redSoft,
+    fillStyle: "hachure",
+    hachureAngle: 42,
+    hachureGap: 16,
+    fillWeight: 1,
+  });
+  const area = roughPolygon(
+    [...pixels, [PAD_L + PLOT_W, PAD_T + PLOT_H], [PAD_L, PAD_T + PLOT_H]],
+    {
+      seed: seed + 13,
+      roughness: 1.3,
+      stroke: "none",
+      fill: THEME.blueSoft,
+      fillStyle: "hachure",
+      hachureAngle: -41,
+      hachureGap: 13,
+      fillWeight: 1,
+    },
+  );
+  const line = roughPath(pixels, {
+    seed: seed + 14,
+    roughness: 1,
+    bowing: 1.2,
+    stroke: THEME.ink,
+    strokeWidth: 2,
+  });
   const dueX = PAD_L + dueAt * PLOT_W;
+  const dueLine = roughLine(dueX, PAD_T - 4, dueX, PAD_T + PLOT_H, {
+    seed: seed + 15,
+    roughness: 1.1,
+    stroke: THEME.ink,
+    strokeWidth: 1.2,
+    strokeLineDash: [6, 5],
+  });
+
   const nowX = PAD_L + position * PLOT_W;
   const nowY = evalCurve(points, position);
   const nowPy = PAD_T + (1 - nowY) * PLOT_H;
@@ -99,51 +153,33 @@ export function CurveEditor({ curve, onChange, dueAt, position, leadDays, lateDa
         onPointerUp={() => setDragging(null)}
         onPointerLeave={() => setDragging(null)}
       >
-        <rect
-          x={PAD_L}
-          y={PAD_T}
-          width={PLOT_W}
-          height={PLOT_H}
-          className="plot-bg"
-          rx={2}
-        />
-        {[0.25, 0.5, 0.75].map((g) => (
-          <line
-            key={g}
-            x1={PAD_L}
-            x2={PAD_L + PLOT_W}
-            y1={PAD_T + g * PLOT_H}
-            y2={PAD_T + g * PLOT_H}
-            className="plot-grid"
-          />
+        {[...frame, ...lateBand, ...area, ...line, ...dueLine].map((p, i) => (
+          <path key={i} d={p.d} stroke={p.stroke} strokeWidth={p.strokeWidth} fill={p.fill} />
         ))}
-        <rect
-          x={dueX}
-          y={PAD_T}
-          width={PAD_L + PLOT_W - dueX}
-          height={PLOT_H}
-          className="plot-late"
-        />
-        <path d={areaPath} className="plot-fill" />
-        <path d={linePath} className="plot-line" />
 
-        <line x1={dueX} y1={PAD_T - 6} x2={dueX} y2={PAD_T + PLOT_H} className="plot-due" />
-        <text x={dueX + 5} y={PAD_T + 9} className="plot-tick">
+        <text x={dueX + 6} y={PAD_T + 12} className="plot-tick">
           due
         </text>
 
         <line x1={nowX} y1={PAD_T} x2={nowX} y2={PAD_T + PLOT_H} className="plot-now" />
-        <circle cx={nowX} cy={nowPy} r={5} fill={urgencyColor(nowY)} stroke="#fff" strokeWidth={2} />
+        <circle
+          cx={nowX}
+          cy={nowPy}
+          r={5.5}
+          fill={urgencyColor(nowY)}
+          stroke={THEME.ink}
+          strokeWidth={1.4}
+        />
 
         {points.map((p, i) => {
-          const px = toPx(p);
+          const [px, py] = toPx(p);
           const locked = i === 0 || i === points.length - 1;
           return (
             <g key={i}>
               <circle
-                cx={px.x}
-                cy={px.y}
-                r={9}
+                cx={px}
+                cy={py}
+                r={10}
                 className={`handle-hit${selected === i ? " is-selected" : ""}`}
                 tabIndex={0}
                 role="slider"
@@ -170,28 +206,28 @@ export function CurveEditor({ curve, onChange, dueAt, position, leadDays, lateDa
                   e.preventDefault();
                 }}
               />
-              <circle cx={px.x} cy={px.y} r={4.5} className="handle" />
+              <circle cx={px} cy={py} r={5} className="handle" />
             </g>
           );
         })}
 
-        <text x={PAD_L - 8} y={PAD_T + 5} className="axis" textAnchor="end">
+        <text x={PAD_L - 8} y={PAD_T + 8} className="axis" textAnchor="end">
           100
         </text>
         <text x={PAD_L - 8} y={PAD_T + PLOT_H} className="axis" textAnchor="end">
           0
         </text>
-        <text x={PAD_L} y={H - 10} className="axis">
+        <text x={PAD_L} y={H - 8} className="axis">
           {leadDays}d before
         </text>
-        <text x={PAD_L + PLOT_W} y={H - 10} className="axis" textAnchor="end">
+        <text x={PAD_L + PLOT_W} y={H - 8} className="axis" textAnchor="end">
           {lateDays}d late
         </text>
       </svg>
 
       <p className="curve-help">
         Drag a point to reshape the ramp. Click the plot to add one, select a point and press Delete
-        to remove it. The marker shows where this task sits right now.
+        to remove it. The dot shows where this task sits right now.
         {selected !== null && (
           <>
             {" "}

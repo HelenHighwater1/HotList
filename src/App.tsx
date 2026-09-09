@@ -7,6 +7,8 @@ import { CURVE_PRESETS, DAY_MS } from "./lib/curve";
 import { formatDate, nextDue } from "./lib/recurrence";
 import { TaskCard } from "./components/TaskCard";
 import { TaskPanel } from "./components/TaskPanel";
+import { RoughFrame } from "./components/RoughFrame";
+import { seedFrom, THEME } from "./lib/theme";
 
 const BASE_NOW = Date.now();
 
@@ -69,8 +71,9 @@ export default function App() {
   return (
     <div className="app">
       <header className="topbar">
+        <RoughFrame seed={7} stroke={THEME.ink} fill={THEME.panel} strokeWidth={1.4} />
         <div className="brand">
-          <h1>Curveboard</h1>
+          <h1>Hot List</h1>
           <p className="tagline">Tasks sorted by how much they actually matter right now.</p>
         </div>
 
@@ -126,6 +129,13 @@ export default function App() {
           )}
           {columns.map((col) => (
             <section key={col.id} className={`column${col.id === "overdue" ? " is-overdue" : ""}`}>
+              <RoughFrame
+                seed={seedFrom(col.id)}
+                stroke={col.id === "overdue" ? THEME.red : THEME.hairline}
+                strokeWidth={col.id === "overdue" ? 1.8 : 1.4}
+                roughness={1.5}
+                dashed={col.id !== "overdue"}
+              />
               <header className="column-head">
                 <h2>{col.label}</h2>
                 <span className="column-hint mono">
